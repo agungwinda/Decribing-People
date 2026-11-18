@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GUESS WHO? – DESCRIBING PERSON (Kelas VII SMP)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka & Nunito -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tone.js for cheerful sound effects without external audio files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+    <style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #fef9c3 50%, #fce7f3 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+        h1, h2, h3, .font-display {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* Custom Cartoon Button Styling */
+        .btn-cartoon {
+            transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.18);
+        }
+        .btn-cartoon:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 0 rgba(0, 0, 0, 0.2);
+        }
+        .btn-cartoon:active:not(:disabled) {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+        }
+
+        /* Speaker Pulse Animation when speaking */
+        @keyframes pulseRing {
+            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(14, 165, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
+        .speaking-active {
+            animation: pulseRing 1.2s infinite;
+            background-color: #0284c7 !important;
+            color: #ffffff !important;
+        }
+
+        /* Float & Pop Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-7px); }
+        }
+        .animate-float {
+            animation: floatSlow 3.2s ease-in-out infinite;
+        }
+
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.94) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .screen-enter {
+            animation: popIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Drag & Drop Styles */
+        .draggable-chip {
+            touch-action: manipulation;
+            cursor: grab;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .draggable-chip:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        .drop-zone {
+            transition: all 0.2s ease;
+        }
+        .drop-zone.drag-over {
+            background-color: #dbeafe;
+            border-color: #3b82f6;
+            transform: scale(1.03);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col items-center justify-between p-3 sm:p-5">
+
+    <!-- Top Navigation / Status Header (Hidden on Opening Screen) -->
+    <header id="top-bar" class="hidden w-full max-w-6xl bg-white/95 backdrop-blur-md rounded-2xl shadow-md border-2 border-sky-200 px-4 py-3 mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+            <span class="bg-amber-400 text-slate-900 font-display font-bold px-3 py-1 rounded-xl text-sm sm:text-base shadow-sm">
+                🕵️ GUESS WHO?
+            </span>
+            <span id="header-student-name" class="text-sm sm:text-base font-bold text-sky-700 bg-sky-100 px-3 py-1 rounded-xl">
+                Student
+            </span>
+        </div>
+
+        <!-- Progress Stepper -->
+        <div class="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm font-bold overflow-x-auto">
+            <span id="step-dict" class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-600 whitespace-nowrap">📖 Word Bank</span>
+            <span class="text-slate-400">➔</span>
+            <span id="step-g1" class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-600 whitespace-nowrap">1. Adjectives</span>
+            <span class="text-slate-400">➔</span>
+            <span id="step-g2" class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-600 whitespace-nowrap">2. Match</span>
+            <span class="text-slate-400">➔</span>
+            <span id="step-g3" class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-600 whitespace-nowrap">3. Who Is It?</span>
+        </div>
+
+        <!-- Live Score & Master Audio Control -->
+        <div class="flex items-center gap-2">
+            <div class="bg-emerald-100 border border-emerald-300 text-emerald-800 px-3 py-1 rounded-xl font-display font-bold text-sm sm:text-base">
+                ⭐ Skor: <span id="live-score">0</span>
+            </div>
+            <button id="btn-sound-global" onclick="toggleAudioSetting()" title="Aktifkan/Nonaktifkan Suara"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-100 hover:bg-sky-200 border border-sky-300 text-sky-800 font-bold text-xs sm:text-sm cursor-pointer">
+                <span id="sound-icon">🔊</span>
+                <span id="sound-label" class="hidden sm:inline">Audio ON</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main id="app-container" class="w-full max-w-6xl flex-grow flex flex-col justify-center">
+
+        <!-- ==================== 1. OPENING PAGE ==================== -->
+        <section id="screen-opening" class="screen-enter bg-white/95 rounded-3xl shadow-xl border-4 border-sky-300 p-6 sm:p-10 text-center relative">
+            <!-- Top Right Audio Control on Opening Screen -->
+            <div class="flex justify-between items-center mb-4">
+                <span class="bg-amber-300 text-amber-950 font-bold px-3.5 py-1 rounded-full text-xs sm:text-sm shadow-sm">
+                    📚 Bahasa Inggris Kelas VII SMP • Reading–Viewing
+                </span>
+                <div class="flex items-center gap-2">
+                    <button onclick="playOpeningWelcome(this)" title="Dengarkan Sambutan"
+                        class="btn-cartoon flex items-center gap-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs sm:text-sm cursor-pointer">
+                        <span>🔊</span> <span>Welcome Audio</span>
+                    </button>
+                    <button onclick="toggleAudioSetting()" title="Pengaturan Audio"
+                        class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold text-xs sm:text-sm cursor-pointer">
+                        <span class="sound-status-emoji">🔊</span>
+                    </button>
+                </div>
+            </div>
+
+            <h1 class="text-3xl sm:text-5xl font-extrabold text-sky-600 tracking-tight mb-1 drop-shadow-sm">
+                GUESS WHO? – DESCRIBING PERSON
+            </h1>
+            <p class="text-base sm:text-lg font-bold text-pink-500 mb-6">
+                Interactive Reading & Viewing Game with Anime Cartoon Characters ✨
+            </p>
+
+            <!-- Diverse Anime Human-Like Cartoon Characters Showcase -->
+            <div id="opening-characters" class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto mb-6">
+                <!-- Populated dynamically -->
+            </div>
+
+            <!-- Instructions Box with Speaker & Replay -->
+            <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4 sm:p-5 max-w-2xl mx-auto mb-6 text-left">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <h3 class="font-display font-bold text-sky-800 text-base sm:text-lg flex items-center gap-2">
+                        <span>💡</span> Petunjuk Bermain:
+                    </h3>
+                    <button onclick="speakEnglish('Welcome to Guess Who! Let us learn how to describe people and play the games!', this)"
+                        class="flex items-center gap-1 bg-white hover:bg-sky-100 border border-sky-300 text-sky-700 font-bold px-3 py-1 rounded-xl text-xs cursor-pointer shadow-sm">
+                        <span>🔊</span> <span>Dengarkan Petunjuk</span>
+                    </button>
+                </div>
+                <ul class="space-y-1.5 text-sm sm:text-base text-slate-700 font-medium">
+                    <li>1️⃣ Pelajari kosakata ciri-ciri fisik dan contoh kalimatnya di <strong>Word Bank (Picture Dictionary)</strong>.</li>
+                    <li>2️⃣ Selesaikan <strong>3 tantangan permainan</strong> secara berurutan (<em>Pick the Adjectives</em>, <em>Match Word to Picture</em>, dan <em>Who Is It?</em>).</li>
+                    <li>3️⃣ Gunakan tombol <strong>Speaker (🔊)</strong> untuk mendengarkan pengucapan kosakata maupun instruksi soal.</li>
+                </ul>
+            </div>
+
+            <!-- Student Name Input & Start Button -->
+            <div class="max-w-md mx-auto flex flex-col sm:flex-row gap-3 items-center justify-center">
+                <input type="text" id="input-student-name" placeholder="Masukkan namamu (opsional)..."
+                    class="w-full sm:flex-1 px-4 py-3.5 rounded-2xl border-2 border-slate-300 focus:border-sky-500 focus:outline-none font-bold text-slate-700 text-center sm:text-left">
+                <button onclick="startGame()"
+                    class="btn-cartoon w-full sm:w-auto bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 text-white font-display font-bold text-lg sm:text-xl px-8 py-3.5 rounded-2xl cursor-pointer">
+                    Start Game 🚀
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== 2. WORD BANK (PICTURE DICTIONARY) ==================== -->
+        <section id="screen-dictionary" class="hidden screen-enter bg-white/95 rounded-3xl shadow-xl border-4 border-amber-300 p-5 sm:p-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b-2 border-amber-100 pb-4 mb-5">
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">TAHAP PERSIAPAN</span>
+                        <button onclick="speakEnglish('Study the vocabulary and example sentences in the Picture Dictionary. Click the speaker icons to listen.', this)"
+                            class="flex items-center gap-1 bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-800 font-bold px-2.5 py-0.5 rounded-full text-xs cursor-pointer">
+                            <span>🔊</span> <span>Instruksi Audio</span>
+                        </button>
+                        <button onclick="replayLastSpeech(this)" title="Ulangi Audio Terakhir"
+                            class="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 font-bold px-2.5 py-0.5 rounded-full text-xs cursor-pointer">
+                            <span>🔁</span> <span>Replay</span>
+                        </button>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1">📖 Picture Dictionary (Word Bank)</h2>
+                    <p class="text-slate-600 text-sm sm:text-base">Klik ikon <strong>🔊</strong> pada kartu kosakata atau contoh kalimat untuk mendengarkan pengucapannya.</p>
+                </div>
+                <button onclick="goToGame1()"
+                    class="btn-cartoon bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-display font-bold text-base sm:text-lg px-6 py-3 rounded-2xl shrink-0 cursor-pointer">
+                    Continue to Game 1 ➔
+                </button>
+            </div>
+
+            <!-- Category Navigation Buttons (Color-Coded) -->
+            <div class="flex flex-wrap gap-2 mb-5" id="dict-tabs">
+                <button onclick="filterDictionary('all', this)" class="dict-tab bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm shadow-sm cursor-pointer">
+                    Semua Kategori (5)
+                </button>
+                <button onclick="filterDictionary('height', this)" class="dict-tab bg-sky-100 hover:bg-sky-200 text-sky-800 border border-sky-300 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                    A. Height (Tinggi)
+                </button>
+                <button onclick="filterDictionary('weight', this)" class="dict-tab bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                    B. Weight (Bentuk Tubuh)
+                </button>
+                <button onclick="filterDictionary('age', this)" class="dict-tab bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                    C. Age (Usia)
+                </button>
+                <button onclick="filterDictionary('hair', this)" class="dict-tab bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-300 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                    D. Hair (Rambut)
+                </button>
+                <button onclick="filterDictionary('eyes', this)" class="dict-tab bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                    E. Eyes (Mata)
+                </button>
+            </div>
+
+            <!-- Dictionary Content Container -->
+            <div id="dictionary-grid" class="space-y-8 max-h-[62vh] overflow-y-auto pr-1">
+                <!-- Populated dynamically with color-coded categories, cards, and sentence boxes -->
+            </div>
+
+            <div class="mt-6 pt-4 border-t-2 border-slate-100 flex flex-wrap justify-between items-center gap-3">
+                <button onclick="replayLastSpeech(this)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-sm cursor-pointer">
+                    🔁 Replay Last Audio
+                </button>
+                <button onclick="goToGame1()"
+                    class="btn-cartoon bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-display font-bold text-lg px-8 py-3 rounded-2xl cursor-pointer">
+                    Continue to Game 1 ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== 3. GAME 1: PICK THE ADJECTIVES ==================== -->
+        <section id="screen-game1" class="hidden screen-enter bg-white/95 rounded-3xl shadow-xl border-4 border-sky-300 p-5 sm:p-8">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-sky-100 pb-3 mb-4">
+                <div>
+                    <span class="bg-sky-100 text-sky-800 text-xs font-extrabold px-3 py-1 rounded-full">GAME 1 • C1 (MENGINGAT KOSAKATA)</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-sky-700 mt-1">🎯 Pick the Adjectives</h2>
+                </div>
+                <div class="bg-sky-50 border border-sky-200 px-4 py-1.5 rounded-xl font-bold text-sky-800 text-sm sm:text-base">
+                    Soal <span id="g1-q-num">1</span> dari <span id="g1-q-total">4</span>
+                </div>
+            </div>
+
+            <!-- Audio + Written Instruction Bar -->
+            <div class="bg-amber-50 border-2 border-amber-200 p-3.5 rounded-2xl mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="text-slate-700 font-semibold text-sm sm:text-base">
+                    📌 <strong>Instruksi:</strong> Perhatikan gambar dengan saksama. Pilih <strong>3 kata sifat (adjectives)</strong> yang tepat untuk mendeskripsikan orang tersebut!
+                    <span class="block text-xs text-sky-700 italic mt-0.5">"Look at the picture carefully. Choose the correct words to describe the person."</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="g1-btn-audio" onclick="playGame1Instruction(this)"
+                        class="btn-cartoon flex items-center gap-1.5 bg-sky-500 hover:bg-sky-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                        <span>🔊</span> <span>Dengarkan</span>
+                    </button>
+                    <button onclick="playGame1Instruction(document.getElementById('g1-btn-audio'))" title="Ulangi Instruksi"
+                        class="bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                        🔁 Replay
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <!-- Character Card -->
+                <div class="md:col-span-5 bg-gradient-to-b from-sky-50 to-indigo-50 border-2 border-sky-200 rounded-3xl p-4 flex flex-col items-center justify-center shadow-inner">
+                    <div id="g1-character-svg" class="w-48 h-56 sm:w-56 sm:h-64 flex items-center justify-center"></div>
+                    <span id="g1-char-label" class="mt-2 bg-white px-4 py-1 rounded-full font-display font-bold text-slate-700 shadow-sm border border-slate-200">
+                        Character #1
+                    </span>
+                </div>
+
+                <!-- Adjective Choices -->
+                <div class="md:col-span-7 flex flex-col justify-between">
+                    <div>
+                        <p class="text-sm font-bold text-slate-500 mb-3">Klik untuk memilih/membatalkan pilihan (Pilih 3 jawaban):</p>
+                        <div id="g1-options" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <!-- Adjective buttons generated here -->
+                        </div>
+                    </div>
+
+                    <!-- Inline Feedback Box -->
+                    <div id="g1-feedback" class="hidden mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2"></div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-6 flex flex-wrap gap-3 justify-end">
+                        <button id="g1-btn-check" onclick="checkGame1()"
+                            class="btn-cartoon bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-display font-bold text-base sm:text-lg px-7 py-3 rounded-2xl cursor-pointer">
+                            Check Answer ✅
+                        </button>
+                        <button id="g1-btn-next" onclick="nextGame1()"
+                            class="hidden btn-cartoon bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-display font-bold text-base sm:text-lg px-7 py-3 rounded-2xl cursor-pointer">
+                            Next Question ➔
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 4. GAME 2: MATCH WORD TO PICTURE ==================== -->
+        <section id="screen-game2" class="hidden screen-enter bg-white/95 rounded-3xl shadow-xl border-4 border-purple-300 p-5 sm:p-8">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-purple-100 pb-3 mb-4">
+                <div>
+                    <span class="bg-purple-100 text-purple-800 text-xs font-extrabold px-3 py-1 rounded-full">GAME 2 • C2 (MEMAHAMI MAKNA & GAMBAR)</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-purple-700 mt-1">🧩 Match Word to Picture</h2>
+                </div>
+                <div class="bg-purple-50 border border-purple-200 px-4 py-1.5 rounded-xl font-bold text-purple-800 text-sm sm:text-base">
+                    Ronde <span id="g2-round-num">1</span> dari <span id="g2-round-total">2</span>
+                </div>
+            </div>
+
+            <!-- Audio + Written Instruction Bar -->
+            <div class="bg-purple-50 border-2 border-purple-200 p-3.5 rounded-2xl mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="text-slate-700 font-semibold text-sm sm:text-base">
+                    📌 <strong>Instruksi:</strong> Cocokkan setiap kata dengan gambar yang tepat. Seret dan letakkan (<em>drag & drop</em>) kata pada tempat yang sesuai! <span class="text-xs text-slate-500">(HP/Tablet: klik kata lalu klik kotak gambarnya).</span>
+                    <span class="block text-xs text-purple-700 italic mt-0.5">"Match each word with the correct picture. Drag and drop the words into the correct places."</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="g2-btn-audio" onclick="playGame2Instruction(this)"
+                        class="btn-cartoon flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                        <span>🔊</span> <span>Dengarkan</span>
+                    </button>
+                    <button onclick="playGame2Instruction(document.getElementById('g2-btn-audio'))" title="Ulangi Instruksi"
+                        class="bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                        🔁 Replay
+                    </button>
+                </div>
+            </div>
+
+            <!-- Word Bank Pool for Dragging -->
+            <div class="bg-slate-100 border-2 border-slate-200 rounded-2xl p-3 sm:p-4 mb-5">
+                <p class="text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">Pilihan Kosakata (Drag ke Gambar):</p>
+                <div id="g2-word-pool" class="flex flex-wrap gap-2.5 min-h-[48px] justify-center">
+                    <!-- Draggable word chips -->
+                </div>
+            </div>
+
+            <!-- 4 Picture Drop Zones -->
+            <div id="g2-drop-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <!-- Drop zones generated dynamically -->
+            </div>
+
+            <!-- Feedback Box -->
+            <div id="g2-feedback" class="hidden mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2"></div>
+
+            <!-- Action Buttons -->
+            <div class="mt-6 flex flex-wrap gap-3 justify-between items-center">
+                <button onclick="resetGame2Round()" class="text-sm font-bold text-slate-500 hover:text-slate-800 underline px-3 py-2 cursor-pointer">
+                    🔄 Reset Posisi Kata
+                </button>
+                <div class="flex gap-3">
+                    <button id="g2-btn-check" onclick="checkGame2()"
+                        class="btn-cartoon bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-display font-bold text-base sm:text-lg px-7 py-3 rounded-2xl cursor-pointer">
+                        Check Matches ✅
+                    </button>
+                    <button id="g2-btn-next" onclick="nextGame2()"
+                        class="hidden btn-cartoon bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-display font-bold text-base sm:text-lg px-7 py-3 rounded-2xl cursor-pointer">
+                        Continue ➔
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 5. GAME 3: WHO IS IT? ==================== -->
+        <section id="screen-game3" class="hidden screen-enter bg-white/95 rounded-3xl shadow-xl border-4 border-pink-300 p-5 sm:p-8">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-pink-100 pb-3 mb-4">
+                <div>
+                    <span class="bg-pink-100 text-pink-800 text-xs font-extrabold px-3 py-1 rounded-full">GAME 3 • C2–C3 (MEMBACA TEKS DESKRIPTIF)</span>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-pink-600 mt-1">🔍 Who Is It?</h2>
+                </div>
+                <div class="bg-pink-50 border border-pink-200 px-4 py-1.5 rounded-xl font-bold text-pink-800 text-sm sm:text-base">
+                    Soal <span id="g3-q-num">1</span> dari <span id="g3-q-total">4</span>
+                </div>
+            </div>
+
+            <!-- Audio + Written Instruction Bar (Instruction ONLY, descriptive text stays reading-focused) -->
+            <div class="bg-pink-50 border-2 border-pink-200 p-3.5 rounded-2xl mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="text-slate-700 font-semibold text-sm sm:text-base">
+                    📌 <strong>Instruksi:</strong> Baca deskripsi dengan saksama secara mandiri. Kemudian, pilih orang yang tepat dari gambar yang tersedia!
+                    <span class="block text-xs text-pink-700 italic mt-0.5">"Read the description carefully. Then, choose the correct person from the pictures."</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="g3-btn-audio" onclick="playGame3Instruction(this)"
+                        class="btn-cartoon flex items-center gap-1.5 bg-pink-500 hover:bg-pink-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                        <span>🔊</span> <span>Dengarkan Perintah</span>
+                    </button>
+                    <button onclick="playGame3Instruction(document.getElementById('g3-btn-audio'))" title="Ulangi Perintah"
+                        class="bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold px-3 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                        🔁 Replay
+                    </button>
+                </div>
+            </div>
+
+            <!-- Descriptive Text Card (Reading–Viewing Focus: Text is read silently by student) -->
+            <div class="bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-300 rounded-2xl p-4 sm:p-5 mb-5 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl sm:text-3xl">📖</span>
+                    <div>
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-amber-700">Read the description carefully (Baca teks berikut):</span>
+                        <p id="g3-description-text" class="text-base sm:text-xl font-bold text-slate-800 mt-1 leading-relaxed">
+                            "Rina is a young girl. She is medium-height and thin. She has long, straight, brown hair and big brown eyes."
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-sm font-bold text-slate-600 mb-3">👇 Klik karakter kartun yang sesuai dengan teks deskriptif di atas:</p>
+
+            <!-- 4 Character Options -->
+            <div id="g3-characters-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <!-- 4 clickable character cards -->
+            </div>
+
+            <!-- Feedback Box -->
+            <div id="g3-feedback" class="hidden mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2"></div>
+
+            <!-- Next Button -->
+            <div class="mt-6 flex justify-end">
+                <button id="g3-btn-next" onclick="nextGame3()"
+                    class="hidden btn-cartoon bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-display font-bold text-base sm:text-lg px-8 py-3 rounded-2xl cursor-pointer">
+                    Next Question ➔
+                </button>
+            </div>
+        </section>
+
+        <!-- ==================== 6. INTERMEDIATE STAGE SUMMARY MODAL ==================== -->
+        <div id="stage-summary-modal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="screen-enter bg-white rounded-3xl border-4 border-emerald-400 p-6 sm:p-8 max-w-md w-full text-center shadow-2xl">
+                <div class="text-5xl mb-3">🎉</div>
+                <h3 id="modal-stage-title" class="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Game 1 Selesai!</h3>
+                <p id="modal-stage-msg" class="text-slate-600 font-semibold mb-4">Hebat! Kamu sudah menguasai kosakata ciri fisik.</p>
+                <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 mb-6">
+                    <span class="text-sm font-bold text-emerald-700 block">Skor Permainan Ini:</span>
+                    <span id="modal-stage-score" class="text-3xl font-display font-extrabold text-emerald-600">40 / 40</span>
+                </div>
+                <button id="modal-stage-btn" class="btn-cartoon w-full bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-display font-bold text-lg py-3.5 rounded-2xl cursor-pointer">
+                    Lanjut ke Game Berikutnya ➔
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== 7. FINAL RESULT PAGE ==================== -->
+        <section id="screen-result" class="hidden screen-enter bg-white/95 rounded-3xl shadow-xl border-4 border-emerald-400 p-6 sm:p-10 text-center">
+            <div class="flex justify-end mb-2">
+                <button id="res-btn-audio" onclick="playClosingAudio(this)"
+                    class="btn-cartoon flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs sm:text-sm cursor-pointer">
+                    <span>🔊</span> <span>Dengarkan Pesan Penutup</span>
+                </button>
+            </div>
+
+            <div class="text-5xl sm:text-6xl mb-2 animate-float">🏆</div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs sm:text-sm font-extrabold px-4 py-1 rounded-full">CONGRATULATIONS!</span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-800 mt-2 mb-1">Hasil Akhir Pembelajaran</h2>
+            <p class="text-lg sm:text-xl font-bold text-sky-600 mb-6">
+                Siswa: <span id="res-student-name" class="underline decoration-amber-400 decoration-4">Student</span>
+            </p>
+
+            <!-- Score Breakdown Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-6">
+                <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-4">
+                    <span class="text-xs font-extrabold text-sky-600 uppercase">Game 1: Pick the Adjectives</span>
+                    <div class="text-2xl sm:text-3xl font-display font-extrabold text-sky-800 mt-1">
+                        <span id="res-g1-score">0</span> <span class="text-base text-slate-400">/ 40</span>
+                    </div>
+                </div>
+                <div class="bg-purple-50 border-2 border-purple-200 rounded-2xl p-4">
+                    <span class="text-xs font-extrabold text-purple-600 uppercase">Game 2: Match Word to Picture</span>
+                    <div class="text-2xl sm:text-3xl font-display font-extrabold text-purple-800 mt-1">
+                        <span id="res-g2-score">0</span> <span class="text-base text-slate-400">/ 40</span>
+                    </div>
+                </div>
+                <div class="bg-pink-50 border-2 border-pink-200 rounded-2xl p-4">
+                    <span class="text-xs font-extrabold text-pink-600 uppercase">Game 3: Who Is It?</span>
+                    <div class="text-2xl sm:text-3xl font-display font-extrabold text-pink-800 mt-1">
+                        <span id="res-g3-score">0</span> <span class="text-base text-slate-400">/ 40</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Score Banner -->
+            <div class="bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-400 rounded-3xl p-5 max-w-xl mx-auto mb-6 shadow-md border-2 border-amber-500">
+                <span class="text-sm font-extrabold text-amber-900 uppercase tracking-wider">Total Skor Keseluruhan</span>
+                <div class="text-4xl sm:text-5xl font-display font-extrabold text-slate-900 my-1">
+                    <span id="res-total-score">0</span> <span class="text-xl text-amber-900">/ 120</span>
+                </div>
+                <p id="res-motivation" class="text-sm sm:text-base font-bold text-amber-950 mt-2 bg-white/60 rounded-xl p-3">
+                    "Congratulations! You have finished all the games. Great job and keep learning!"
+                </p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4">
+                <button onclick="openDictionaryReview()"
+                    class="btn-cartoon bg-amber-100 hover:bg-amber-200 text-amber-900 border-2 border-amber-300 font-display font-bold text-base sm:text-lg px-6 py-3.5 rounded-2xl cursor-pointer">
+                    📖 Lihat Word Bank
+                </button>
+                <button onclick="playAgain()"
+                    class="btn-cartoon bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-display font-bold text-base sm:text-lg px-8 py-3.5 rounded-2xl cursor-pointer">
+                    Play Again 🔄
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-6xl text-center text-xs sm:text-sm text-slate-500 font-semibold mt-4">
+        Media Pembelajaran Interaktif Bahasa Inggris • Kelas VII SMP • Topik: Describing Person (Reading–Viewing)
+    </footer>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        /* =========================================================================
+           1. AUDIO & VOICE GUIDANCE ENGINE (Web Speech API + Tone.js SFX)
+           ========================================================================= */
+        let audioEnabled = true;
+        let availableVoices = [];
+        let lastSpeechRecord = {
+            enText: "Welcome to Guess Who! Let's learn how to describe people and play the games!",
+            idText: ""
+        };
+        let activeSpeakerBtn = null;
+
+        // Load browser voices cleanly for English and Indonesian
+        function loadVoices() {
+            if ('speechSynthesis' in window) {
+                availableVoices = window.speechSynthesis.getVoices();
+            }
+        }
+        if ('speechSynthesis' in window) {
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        function getPreferredVoice(langPrefix) {
+            if (!availableVoices.length) loadVoices();
+            // Try exact or regional match (e.g., en-US, en-GB, id-ID)
+            let voice = availableVoices.find(v => v.lang.toLowerCase().startsWith(langPrefix.toLowerCase()) && v.name.includes('Google'));
+            if (!voice) {
+                voice = availableVoices.find(v => v.lang.toLowerCase().startsWith(langPrefix.toLowerCase()));
+            }
+            return voice || null;
+        }
+
+        function stopAllSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            if (activeSpeakerBtn) {
+                activeSpeakerBtn.classList.remove('speaking-active');
+                activeSpeakerBtn = null;
+            }
+        }
+
+        // Speak English text cleanly without overlap
+        function speakEnglish(text, btnElement = null, onEndCallback = null) {
+            lastSpeechRecord = { enText: text, idText: '' };
+            if (!audioEnabled) return;
+            stopAllSpeech();
+
+            if (!('speechSynthesis' in window)) return;
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            const enVoice = getPreferredVoice('en');
+            if (enVoice) utterance.voice = enVoice;
+            utterance.rate = 0.92; // Clear, natural speed for 7th-grade students
+            utterance.pitch = 1.05;
+
+            if (btnElement) {
+                activeSpeakerBtn = btnElement;
+                btnElement.classList.add('speaking-active');
+            }
+
+            utterance.onend = () => {
+                if (btnElement) btnElement.classList.remove('speaking-active');
+                if (activeSpeakerBtn === btnElement) activeSpeakerBtn = null;
+                if (onEndCallback) onEndCallback();
+            };
+            utterance.onerror = () => {
+                if (btnElement) btnElement.classList.remove('speaking-active');
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function replayLastSpeech(btnElement = null) {
+            if (lastSpeechRecord.enText) {
+                speakEnglish(lastSpeechRecord.enText, btnElement);
+            }
+        }
+
+        // Specific Voice Guidance Functions per Section (English Only)
+        function playOpeningWelcome(btn) {
+            speakEnglish("Welcome to Guess Who! Let's learn how to describe people and play the games!", btn);
+        }
+
+        function playGame1Instruction(btn) {
+            speakEnglish("Look at the picture carefully. Choose the correct words to describe the person.", btn);
+        }
+
+        function playGame2Instruction(btn) {
+            speakEnglish("Match each word with the correct picture. Drag and drop the words into the correct places.", btn);
+        }
+
+        function playGame3Instruction(btn) {
+            // Note: Only reads the English instruction, NOT the descriptive text so Reading-Viewing stays autonomous!
+            speakEnglish("Read the description carefully. Then, choose the correct person from the pictures.", btn);
+        }
+
+        function playClosingAudio(btn) {
+            speakEnglish("Congratulations! You have finished all the games. Great job and keep learning!", btn);
+        }
+
+        function toggleAudioSetting() {
+            audioEnabled = !audioEnabled;
+            if (!audioEnabled) stopAllSpeech();
+
+            const icon = audioEnabled ? '🔊' : '🔇';
+            const label = audioEnabled ? 'Audio ON' : 'Audio OFF';
+            const headerIcon = document.getElementById('sound-icon');
+            const headerLabel = document.getElementById('sound-label');
+            if (headerIcon) headerIcon.textContent = icon;
+            if (headerLabel) headerLabel.textContent = label;
+
+            document.querySelectorAll('.sound-status-emoji').forEach(el => {
+                el.textContent = icon;
+            });
+        }
+
+        // Subtle synthesized chime effects via Tone.js
+        function playTone(type) {
+            if (!audioEnabled || typeof Tone === 'undefined') return;
+            try {
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+                const synth = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: { attack: 0.01, decay: 0.12, sustain: 0.04, release: 0.15 }
+                }).toDestination();
+
+                if (type === 'click') {
+                    synth.triggerAttackRelease('C5', '32n');
+                } else if (type === 'correct') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease('C5', '16n', now);
+                    synth.triggerAttackRelease('E5', '16n', now + 0.08);
+                    synth.triggerAttackRelease('G5', '8n', now + 0.16);
+                } else if (type === 'wrong') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease('E3', '16n', now);
+                    synth.triggerAttackRelease('C3', '8n', now + 0.1);
+                } else if (type === 'fanfare') {
+                    const now = Tone.now();
+                    synth.triggerAttackRelease('C5', '16n', now);
+                    synth.triggerAttackRelease('E5', '16n', now + 0.09);
+                    synth.triggerAttackRelease('G5', '16n', now + 0.18);
+                    synth.triggerAttackRelease('C6', '4n', now + 0.27);
+                }
+            } catch (e) {}
+        }
+
+        /* =========================================================================
+           2. ANIME-STYLE HUMAN-LIKE CARTOON CHARACTER SVG GENERATOR
+           ========================================================================= */
+        function renderCartoonCharacter(cfg) {
+            const skinTone = cfg.skin || '#FFE0C8';
+            const skinShadow = '#F5BFA0';
+
+            // Height scaling inside viewBox (0 0 200 265)
+            let scaleY = 1.0;
+            let translateY = 0;
+            let showRuler = cfg.showRuler || false;
+            if (cfg.height === 'tall') {
+                scaleY = 1.05;
+                translateY = -4;
+            } else if (cfg.height === 'medium-height') {
+                scaleY = 0.88;
+                translateY = 28;
+            } else if (cfg.height === 'short') {
+                scaleY = 0.72;
+                translateY = 65;
+            }
+
+            // Weight / Body build parameters
+            let torsoWidth = 52;
+            let armWidth = 12;
+            let legWidth = 15;
+            let faceWidth = 34;
+            let isFit = cfg.weight === 'fit';
+
+            if (cfg.weight === 'fat') {
+                torsoWidth = 84;
+                armWidth = 18;
+                legWidth = 22;
+                faceWidth = 39;
+            } else if (cfg.weight === 'thin') {
+                torsoWidth = 36;
+                armWidth = 9;
+                legWidth = 11;
+                faceWidth = 30;
+            } else if (cfg.weight === 'fit') {
+                torsoWidth = 56;
+                armWidth = 14;
+                legWidth = 16;
+                faceWidth = 33;
+            }
+
+            const hairColors = {
+                brown: '#6F4E37',
+                dark: '#1E293B',
+                red: '#DC2626',
+                blonde: '#FACC15',
+                grey: '#CBD5E1'
+            };
+            let activeHairColor = cfg.age === 'old' && !cfg.keepHairColor ? hairColors.grey : (hairColors[cfg.hairColor] || hairColors.dark);
+
+            const eyeColors = {
+                brown: '#6B3E26',
+                green: '#16A34A',
+                blue: '#2563EB'
+            };
+            const activeEyeColor = eyeColors[cfg.eyeColor] || eyeColors.brown;
+            const eyeRadius = cfg.eyeSize === 'big' ? 8.2 : 4.2;
+            const pupilRadius = cfg.eyeSize === 'big' ? 4.4 : 2.2;
+
+            const shirtColor = cfg.shirtColor || '#38BDF8';
+            const pantsColor = cfg.pantsColor || '#334155';
+
+            // Back Hair Layer (for long hair)
+            let backHairSVG = '';
+            if (cfg.hairStyle !== 'bald' && cfg.hairLength === 'long') {
+                if (cfg.hairStyle === 'curly') {
+                    backHairSVG = `
+                        <g fill="${activeHairColor}">
+                            <circle cx="61" cy="65" r="14"/><circle cx="139" cy="65" r="14"/>
+                            <circle cx="57" cy="89" r="15"/><circle cx="143" cy="89" r="15"/>
+                            <circle cx="60" cy="112" r="14"/><circle cx="140" cy="112" r="14"/>
+                        </g>`;
+                } else if (cfg.hairStyle === 'wavy') {
+                    backHairSVG = `
+                        <path d="M63,50 Q50,86 59,120 Q70,128 78,118 L122,118 Q130,128 141,120 Q150,86 137,50 Z" fill="${activeHairColor}"/>`;
+                } else {
+                    backHairSVG = `
+                        <path d="M63,50 L60,122 Q100,128 140,122 L137,50 Z" fill="${activeHairColor}"/>`;
+                }
+            }
+
+            // Front Anime-style Hair Layer
+            let frontHairSVG = '';
+            if (cfg.hairStyle === 'bald') {
+                frontHairSVG = `
+                    <path d="M74,33 Q100,22 126,33" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" fill="none" opacity="0.75"/>`;
+            } else if (cfg.hairStyle === 'spiky') {
+                frontHairSVG = `
+                    <polygon points="64,56 60,30 75,41 82,17 94,37 102,13 112,37 123,19 127,41 140,30 136,56 125,45 112,53 100,43 88,53 75,45" fill="${activeHairColor}"/>`;
+            } else if (cfg.hairStyle === 'curly') {
+                frontHairSVG = `
+                    <g fill="${activeHairColor}">
+                        <circle cx="71" cy="41" r="12"/><circle cx="88" cy="33" r="13"/>
+                        <circle cx="106" cy="32" r="13"/><circle cx="125" cy="39" r="12"/>
+                        <circle cx="65" cy="54" r="10"/><circle cx="135" cy="54" r="10"/>
+                    </g>`;
+            } else if (cfg.hairStyle === 'wavy') {
+                frontHairSVG = `
+                    <path d="M64,58 C62,27 138,27 136,58 C127,45 115,52 100,44 C85,52 73,45 64,58 Z" fill="${activeHairColor}"/>`;
+            } else {
+                // Anime swept bangs
+                frontHairSVG = `
+                    <path d="M64,59 C63,26 137,26 136,59 C125,44 114,53 102,43 L96,54 L88,44 C78,52 70,48 64,59 Z" fill="${activeHairColor}"/>`;
+            }
+
+            // Age Details
+            let ageDetailsSVG = '';
+            if (cfg.age === 'old') {
+                ageDetailsSVG = `
+                    <path d="M84,46 Q100,43 116,46" stroke="#B98068" stroke-width="1.5" fill="none"/>
+                    <path d="M72,72 Q68,76 72,80" stroke="#B98068" stroke-width="1.5" fill="none"/>
+                    <path d="M128,72 Q132,76 128,80" stroke="#B98068" stroke-width="1.5" fill="none"/>`;
+            } else if (cfg.age === 'middle-aged') {
+                ageDetailsSVG = `
+                    <path d="M88,46 Q100,44 112,46" stroke="#B98068" stroke-width="1.3" fill="none"/>
+                    ${cfg.gender === 'man' ? `<path d="M88,83 Q100,79 112,83" stroke="${activeHairColor}" stroke-width="3.5" stroke-linecap="round" fill="none"/>` : ''}`;
+            }
+
+            // Torso SVG
+            let torsoSVG = '';
+            if (isFit) {
+                torsoSVG = `
+                    <polygon points="${100 - torsoWidth/2 - 4},106 ${100 + torsoWidth/2 + 4},106 ${100 + torsoWidth/2 - 6},176 ${100 - torsoWidth/2 + 6},176" fill="${shirtColor}"/>
+                    <path d="M88,125 L100,136 L112,125" stroke="#FFFFFF" stroke-width="2.5" fill="none" opacity="0.55"/>`;
+            } else {
+                torsoSVG = `
+                    <rect x="${100 - torsoWidth/2}" y="106" width="${torsoWidth}" height="70" rx="${cfg.weight === 'fat' ? 28 : 14}" fill="${shirtColor}"/>`;
+            }
+
+            const rulerSVG = showRuler ? `
+                <g opacity="0.7">
+                    <line x1="20" y1="20" x2="20" y2="245" stroke="#64748B" stroke-width="3" stroke-dasharray="4 3"/>
+                    <line x1="13" y1="30" x2="27" y2="30" stroke="#EF4444" stroke-width="2.5"/>
+                    <text x="10" y="25" font-size="9" font-weight="bold" fill="#EF4444">Tall</text>
+                    <line x1="13" y1="75" x2="27" y2="75" stroke="#F59E0B" stroke-width="2.5"/>
+                    <text x="8" y="70" font-size="9" font-weight="bold" fill="#D97706">Med</text>
+                    <line x1="13" y1="115" x2="27" y2="115" stroke="#3B82F6" stroke-width="2.5"/>
+                    <text x="9" y="110" font-size="9" font-weight="bold" fill="#2563EB">Short</text>
+                </g>` : '';
+
+            return `
+            <svg viewBox="0 0 200 260" class="w-full h-full drop-shadow-sm overflow-visible">
+                ${rulerSVG}
+                <ellipse cx="100" cy="246" rx="${torsoWidth * 0.75}" ry="8" fill="rgba(15, 23, 42, 0.14)"/>
+
+                <g transform="translate(0, ${translateY}) scale(1, ${scaleY})">
+                    ${backHairSVG}
+
+                    <!-- Legs & Shoes -->
+                    <rect x="${100 - torsoWidth/3 - legWidth/2}" y="170" width="${legWidth}" height="68" rx="7" fill="${pantsColor}"/>
+                    <rect x="${100 + torsoWidth/3 - legWidth/2}" y="170" width="${legWidth}" height="68" rx="7" fill="${pantsColor}"/>
+                    <rect x="${100 - torsoWidth/3 - legWidth/2 - 4}" y="232" width="${legWidth + 8}" height="12" rx="6" fill="#1E293B"/>
+                    <rect x="${100 + torsoWidth/3 - legWidth/2 - 4}" y="232" width="${legWidth + 8}" height="12" rx="6" fill="#1E293B"/>
+
+                    <!-- Arms & Sleeves -->
+                    <rect x="${100 - torsoWidth/2 - armWidth + 2}" y="110" width="${armWidth}" height="56" rx="7" fill="${skinTone}"/>
+                    <rect x="${100 + torsoWidth/2 - 2}" y="110" width="${armWidth}" height="56" rx="7" fill="${skinTone}"/>
+                    <rect x="${100 - torsoWidth/2 - armWidth + 1}" y="108" width="${armWidth + 2}" height="22" rx="6" fill="${shirtColor}"/>
+                    <rect x="${100 + torsoWidth/2 - 3}" y="108" width="${armWidth + 2}" height="22" rx="6" fill="${shirtColor}"/>
+
+                    ${torsoSVG}
+
+                    <!-- Neck & Ears -->
+                    <rect x="91" y="92" width="18" height="18" rx="6" fill="${skinShadow}"/>
+                    <circle cx="${100 - faceWidth}" cy="66" r="6" fill="${skinShadow}"/>
+                    <circle cx="${100 + faceWidth}" cy="66" r="6" fill="${skinShadow}"/>
+
+                    <!-- Anime Head Contour -->
+                    <path d="M${100 - faceWidth},48 C${100 - faceWidth},24 ${100 + faceWidth},24 ${100 + faceWidth},48 L${100 + faceWidth - 3},76 Q100,104 ${100 - faceWidth + 3},76 Z" fill="${skinTone}"/>
+
+                    <!-- Soft Anime Blush -->
+                    <ellipse cx="${100 - faceWidth + 12}" cy="75" rx="5.5" ry="3" fill="#FDA4AF" opacity="0.6"/>
+                    <ellipse cx="${100 + faceWidth - 12}" cy="75" rx="5.5" ry="3" fill="#FDA4AF" opacity="0.6"/>
+
+                    <!-- Expressive Anime Eyes -->
+                    <g>
+                        <!-- Left Eye -->
+                        <ellipse cx="86" cy="64" rx="${eyeRadius + 1.5}" ry="${eyeRadius + 2.5}" fill="#FFFFFF"/>
+                        <circle cx="86" cy="64.5" r="${eyeRadius}" fill="${activeEyeColor}"/>
+                        <circle cx="86" cy="64.5" r="${pupilRadius}" fill="#0F172A"/>
+                        <circle cx="${86 - pupilRadius*0.45}" cy="${64 - pupilRadius*0.45}" r="${pupilRadius*0.5}" fill="#FFFFFF"/>
+                        <circle cx="${86 + pupilRadius*0.35}" cy="${65.5 + pupilRadius*0.3}" r="${pupilRadius*0.25}" fill="#FFFFFF"/>
+                        <path d="M${86 - eyeRadius - 2},${62 - eyeRadius*0.6} Q86,${59 - eyeRadius} ${86 + eyeRadius + 2},${62 - eyeRadius*0.6}" stroke="#0F172A" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+
+                        <!-- Right Eye -->
+                        <ellipse cx="114" cy="64" rx="${eyeRadius + 1.5}" ry="${eyeRadius + 2.5}" fill="#FFFFFF"/>
+                        <circle cx="114" cy="64.5" r="${eyeRadius}" fill="${activeEyeColor}"/>
+                        <circle cx="114" cy="64.5" r="${pupilRadius}" fill="#0F172A"/>
+                        <circle cx="${114 - pupilRadius*0.45}" cy="${64 - pupilRadius*0.45}" r="${pupilRadius*0.5}" fill="#FFFFFF"/>
+                        <circle cx="${114 + pupilRadius*0.35}" cy="${65.5 + pupilRadius*0.3}" r="${pupilRadius*0.25}" fill="#FFFFFF"/>
+                        <path d="M${114 - eyeRadius - 2},${62 - eyeRadius*0.6} Q114,${59 - eyeRadius} ${114 + eyeRadius + 2},${62 - eyeRadius*0.6}" stroke="#0F172A" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+                    </g>
+
+                    <!-- Eyebrows -->
+                    <path d="M78,51 Q86,48 94,51" stroke="${activeHairColor}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <path d="M106,51 Q114,48 122,51" stroke="${activeHairColor}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+                    <!-- Cute Anime Nose & Smile -->
+                    <path d="M99,70 L101,74" stroke="#D99B78" stroke-width="2" stroke-linecap="round" fill="none"/>
+                    <path d="M92,83 Q100,90 108,83" stroke="#BE123C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+                    ${ageDetailsSVG}
+                    ${frontHairSVG}
+                </g>
+            </svg>`;
+        }
+
+        /* Zoomed Part Illustrations for Hair & Eyes */
+        function renderHairZoomSVG(colorKey, styleKey, lengthKey) {
+            const hairColors = {
+                brown: '#6F4E37',
+                dark: '#1E293B',
+                red: '#DC2626',
+                blonde: '#FACC15'
+            };
+            const c = hairColors[colorKey] || hairColors.brown;
+
+            if (styleKey === 'bald') {
+                return `<svg viewBox="0 0 120 120" class="w-full h-full">
+                    <circle cx="60" cy="65" r="35" fill="#FFE0C8"/>
+                    <path d="M40,42 Q60,30 80,42" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" fill="none"/>
+                    <circle cx="48" cy="66" r="3.5" fill="#1E293B"/><circle cx="72" cy="66" r="3.5" fill="#1E293B"/>
+                    <path d="M52,80 Q60,86 68,80" stroke="#BE123C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>`;
+            }
+            if (styleKey === 'spiky') {
+                return `<svg viewBox="0 0 120 120" class="w-full h-full">
+                    <circle cx="60" cy="70" r="30" fill="#FFE0C8"/>
+                    <polygon points="28,62 24,35 40,46 46,20 58,42 66,18 76,42 86,22 90,46 102,35 96,62 85,52 35,52" fill="${c}"/>
+                    <circle cx="49" cy="70" r="3" fill="#1E293B"/><circle cx="71" cy="70" r="3" fill="#1E293B"/>
+                    <path d="M53,82 Q60,87 67,82" stroke="#BE123C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>`;
+            }
+            if (styleKey === 'curly') {
+                return `<svg viewBox="0 0 120 120" class="w-full h-full">
+                    <g fill="${c}">
+                        <circle cx="30" cy="65" r="14"/><circle cx="90" cy="65" r="14"/>
+                        <circle cx="28" cy="85" r="13"/><circle cx="92" cy="85" r="13"/>
+                    </g>
+                    <circle cx="60" cy="68" r="28" fill="#FFE0C8"/>
+                    <g fill="${c}">
+                        <circle cx="36" cy="45" r="13"/><circle cx="52" cy="36" r="14"/>
+                        <circle cx="70" cy="36" r="14"/><circle cx="86" cy="45" r="13"/>
+                    </g>
+                    <circle cx="50" cy="68" r="3" fill="#1E293B"/><circle cx="70" cy="68" r="3" fill="#1E293B"/>
+                    <path d="M53,80 Q60,85 67,80" stroke="#BE123C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>`;
+            }
+            if (styleKey === 'wavy') {
+                return `<svg viewBox="0 0 120 120" class="w-full h-full">
+                    <path d="M28,50 Q16,78 26,105 L94,105 Q104,78 92,50 Z" fill="${c}"/>
+                    <circle cx="60" cy="68" r="28" fill="#FFE0C8"/>
+                    <path d="M30,58 C30,30 90,30 90,58 C78,48 68,55 60,46 C52,55 42,48 30,58 Z" fill="${c}"/>
+                    <circle cx="50" cy="68" r="3" fill="#1E293B"/><circle cx="70" cy="68" r="3" fill="#1E293B"/>
+                    <path d="M53,80 Q60,85 67,80" stroke="#BE123C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>`;
+            }
+            if (lengthKey === 'long') {
+                return `<svg viewBox="0 0 120 120" class="w-full h-full">
+                    <rect x="28" y="45" width="64" height="65" rx="14" fill="${c}"/>
+                    <circle cx="60" cy="66" r="27" fill="#FFE0C8"/>
+                    <path d="M32,58 C32,30 88,30 88,58 C76,46 44,46 32,58 Z" fill="${c}"/>
+                    <circle cx="50" cy="66" r="3" fill="#1E293B"/><circle cx="70" cy="66" r="3" fill="#1E293B"/>
+                    <path d="M53,78 Q60,83 67,78" stroke="#BE123C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>`;
+            }
+            return `<svg viewBox="0 0 120 120" class="w-full h-full">
+                <circle cx="60" cy="68" r="29" fill="#FFE0C8"/>
+                <path d="M31,60 C30,28 90,28 89,60 C78,46 42,46 31,60 Z" fill="${c}"/>
+                <circle cx="50" cy="68" r="3" fill="#1E293B"/><circle cx="70" cy="68" r="3" fill="#1E293B"/>
+                <path d="M53,80 Q60,85 67,80" stroke="#BE123C" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            </svg>`;
+        }
+
+        function renderEyesZoomSVG(colorKey, sizeKey) {
+            const eyeColors = {
+                brown: '#6B3E26',
+                green: '#16A34A',
+                blue: '#2563EB'
+            };
+            const iris = eyeColors[colorKey] || eyeColors.brown;
+            const r = sizeKey === 'big' ? 16 : 9;
+            const p = sizeKey === 'big' ? 8 : 4.5;
+
+            return `<svg viewBox="0 0 140 90" class="w-full h-full">
+                <rect x="10" y="15" width="120" height="60" rx="20" fill="#FFE8D6"/>
+                <path d="M26,28 Q42,22 58,28" stroke="#475569" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <path d="M82,28 Q98,22 114,28" stroke="#475569" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                <!-- Left Anime Eye -->
+                <circle cx="42" cy="48" r="${r + 4}" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+                <circle cx="42" cy="48" r="${r}" fill="${iris}"/>
+                <circle cx="42" cy="48" r="${p}" fill="#0F172A"/>
+                <circle cx="${42 - p*0.4}" cy="${48 - p*0.4}" r="${p*0.45}" fill="#FFFFFF"/>
+                <!-- Right Anime Eye -->
+                <circle cx="98" cy="48" r="${r + 4}" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/>
+                <circle cx="98" cy="48" r="${r}" fill="${iris}"/>
+                <circle cx="98" cy="48" r="${p}" fill="#0F172A"/>
+                <circle cx="${98 - p*0.4}" cy="${48 - p*0.4}" r="${p*0.45}" fill="#FFFFFF"/>
+            </svg>`;
+        }
+
+        /* =========================================================================
+           3. PICTURE DICTIONARY DATA (ALL 25 WORDS + EXAMPLE SENTENCES & TRANSLATIONS)
+           ========================================================================= */
+        const DICTIONARY_CATEGORIES = [
+            {
+                id: 'height',
+                title: 'A. Height (Tinggi Badan)',
+                bgClass: 'bg-sky-50/90 border-sky-300',
+                headerClass: 'text-sky-800 bg-sky-200/70',
+                badgeClass: 'bg-sky-600',
+                cardBorder: 'border-sky-200 hover:border-sky-500',
+                items: [
+                    { word: 'Tall', speakWord: 'Tall', meaning: 'Tinggi', exEn: 'He is tall.', exId: 'Dia tinggi.', svg: () => renderCartoonCharacter({ height: 'tall', weight: 'fit', age: 'young', hairColor: 'dark', hairStyle: 'short', eyeColor: 'brown', eyeSize: 'big', showRuler: true, shirtColor: '#0EA5E9' }) },
+                    { word: 'Medium-height', speakWord: 'Medium-height', meaning: 'Tinggi sedang', exEn: 'She is medium-height.', exId: 'Dia memiliki tinggi badan sedang.', svg: () => renderCartoonCharacter({ height: 'medium-height', weight: 'fit', age: 'young', hairColor: 'brown', hairStyle: 'straight', eyeColor: 'brown', eyeSize: 'big', showRuler: true, shirtColor: '#10B981' }) },
+                    { word: 'Short', speakWord: 'Short', meaning: 'Pendek', exEn: 'The boy is short.', exId: 'Anak laki-laki itu pendek.', svg: () => renderCartoonCharacter({ height: 'short', weight: 'fit', age: 'young', hairColor: 'blonde', hairStyle: 'short', eyeColor: 'blue', eyeSize: 'big', showRuler: true, shirtColor: '#F59E0B' }) }
+                ]
+            },
+            {
+                id: 'weight',
+                title: 'B. Weight (Berat / Bentuk Tubuh)',
+                bgClass: 'bg-emerald-50/90 border-emerald-300',
+                headerClass: 'text-emerald-800 bg-emerald-200/70',
+                badgeClass: 'bg-emerald-600',
+                cardBorder: 'border-emerald-200 hover:border-emerald-500',
+                items: [
+                    { word: 'Fat', speakWord: 'Fat', meaning: 'Gemuk', exEn: 'The cartoon character is fat.', exId: 'Karakter kartun itu gemuk.', svg: () => renderCartoonCharacter({ height: 'medium-height', weight: 'fat', age: 'young', hairColor: 'dark', hairStyle: 'short', eyeColor: 'brown', eyeSize: 'big', shirtColor: '#F97316' }) },
+                    { word: 'Fit', speakWord: 'Fit', meaning: 'Bugar', exEn: 'He is fit.', exId: 'Dia bugar.', svg: () => renderCartoonCharacter({ height: 'tall', weight: 'fit', age: 'young', hairColor: 'brown', hairStyle: 'spiky', eyeColor: 'green', eyeSize: 'big', shirtColor: '#10B981' }) },
+                    { word: 'Thin', speakWord: 'Thin', meaning: 'Kurus', exEn: 'She is thin.', exId: 'Dia kurus.', svg: () => renderCartoonCharacter({ height: 'tall', weight: 'thin', age: 'young', hairColor: 'dark', hairStyle: 'straight', eyeColor: 'brown', eyeSize: 'big', shirtColor: '#6366F1' }) }
+                ]
+            },
+            {
+                id: 'age',
+                title: 'C. Age (Usia)',
+                bgClass: 'bg-amber-50/90 border-amber-300',
+                headerClass: 'text-amber-900 bg-amber-200/70',
+                badgeClass: 'bg-amber-600',
+                cardBorder: 'border-amber-200 hover:border-amber-500',
+                items: [
+                    { word: 'Old', speakWord: 'Old', meaning: 'Tua', exEn: 'The woman is old.', exId: 'Wanita itu sudah tua.', svg: () => renderCartoonCharacter({ height: 'medium-height', weight: 'thin', age: 'old', hairColor: 'grey', hairStyle: 'short', eyeColor: 'brown', eyeSize: 'small', shirtColor: '#94A3B8' }) },
+                    { word: 'Middle-aged', speakWord: 'Middle-aged', meaning: 'Paruh baya', exEn: 'My father is middle-aged.', exId: 'Ayah saya berusia paruh baya.', svg: () => renderCartoonCharacter({ height: 'medium-height', weight: 'fit', age: 'middle-aged', gender: 'man', hairColor: 'dark', hairStyle: 'short', eyeColor: 'brown', eyeSize: 'small', shirtColor: '#0284C7' }) },
+                    { word: 'Young', speakWord: 'Young', meaning: 'Muda', exEn: 'The girl is young.', exId: 'Anak perempuan itu masih muda.', svg: () => renderCartoonCharacter({ height: 'medium-height', weight: 'fit', age: 'young', hairColor: 'brown', hairStyle: 'wavy', hairLength: 'long', eyeColor: 'brown', eyeSize: 'big', shirtColor: '#EC4899' }) }
+                ]
+            },
+            {
+                id: 'hair',
+                title: 'D. Hair (Rambut)',
+                bgClass: 'bg-purple-50/90 border-purple-300',
+                headerClass: 'text-purple-900 bg-purple-200/70',
+                badgeClass: 'bg-purple-600',
+                cardBorder: 'border-purple-200 hover:border-purple-500',
+                items: [
+                    { word: 'Brown', speakWord: 'Brown hair', meaning: 'Cokelat', exEn: 'She has brown hair.', exId: 'Dia memiliki rambut cokelat.', svg: () => renderHairZoomSVG('brown', 'straight', 'short') },
+                    { word: 'Dark', speakWord: 'Dark hair', meaning: 'Gelap', exEn: 'He has dark hair.', exId: 'Dia memiliki rambut gelap.', svg: () => renderHairZoomSVG('dark', 'straight', 'short') },
+                    { word: 'Red', speakWord: 'Red hair', meaning: 'Merah', exEn: 'She has red hair.', exId: 'Dia memiliki rambut merah.', svg: () => renderHairZoomSVG('red', 'straight', 'short') },
+                    { word: 'Fair/Blonde', speakWord: 'Fair, or blonde hair', meaning: 'Pirang', exEn: 'She has blonde hair.', exId: 'Dia memiliki rambut pirang.', svg: () => renderHairZoomSVG('blonde', 'straight', 'short') },
+                    { word: 'Spiky', speakWord: 'Spiky hair', meaning: 'Berdiri / runcing', exEn: 'He has spiky hair.', exId: 'Dia memiliki rambut berdiri.', svg: () => renderHairZoomSVG('dark', 'spiky', 'short') },
+                    { word: 'Curly', speakWord: 'Curly hair', meaning: 'Keriting', exEn: 'She has curly hair.', exId: 'Dia memiliki rambut keriting.', svg: () => renderHairZoomSVG('brown', 'curly', 'short') },
+                    { word: 'Wavy', speakWord: 'Wavy hair', meaning: 'Bergelombang', exEn: 'Her hair is wavy.', exId: 'Rambutnya bergelombang.', svg: () => renderHairZoomSVG('dark', 'wavy', 'long') },
+                    { word: 'Straight', speakWord: 'Straight hair', meaning: 'Lurus', exEn: 'She has straight hair.', exId: 'Dia memiliki rambut lurus.', svg: () => renderHairZoomSVG('brown', 'straight', 'long') },
+                    { word: 'Long', speakWord: 'Long hair', meaning: 'Panjang', exEn: 'She has long hair.', exId: 'Dia memiliki rambut panjang.', svg: () => renderHairZoomSVG('red', 'straight', 'long') },
+                    { word: 'Short', speakWord: 'Short hair', meaning: 'Pendek', exEn: 'He has short hair.', exId: 'Dia memiliki rambut pendek.', svg: () => renderHairZoomSVG('dark', 'straight', 'short') },
+                    { word: 'Bald', speakWord: 'Bald', meaning: 'Botak', exEn: 'He is bald.', exId: 'Dia botak.', svg: () => renderHairZoomSVG('dark', 'bald', 'short') }
+                ]
+            },
+            {
+                id: 'eyes',
+                title: 'E. Eyes (Mata)',
+                bgClass: 'bg-pink-50/90 border-pink-300',
+                headerClass: 'text-pink-900 bg-pink-200/70',
+                badgeClass: 'bg-pink-600',
+                cardBorder: 'border-pink-200 hover:border-pink-500',
+                items: [
+                    { word: 'Brown', speakWord: 'Brown eyes', meaning: 'Cokelat', exEn: 'She has brown eyes.', exId: 'Dia memiliki mata cokelat.', svg: () => renderEyesZoomSVG('brown', 'big') },
+                    { word: 'Green', speakWord: 'Green eyes', meaning: 'Hijau', exEn: 'He has green eyes.', exId: 'Dia memiliki mata hijau.', svg: () => renderEyesZoomSVG('green', 'big') },
+                    { word: 'Blue', speakWord: 'Blue eyes', meaning: 'Biru', exEn: 'She has blue eyes.', exId: 'Dia memiliki mata biru.', svg: () => renderEyesZoomSVG('blue', 'big') },
+                    { word: 'Small', speakWord: 'Small eyes', meaning: 'Kecil', exEn: 'He has small eyes.', exId: 'Dia memiliki mata kecil.', svg: () => renderEyesZoomSVG('brown', 'small') },
+                    { word: 'Big', speakWord: 'Big eyes', meaning: 'Besar', exEn: 'She has big eyes.', exId: 'Dia memiliki mata besar.', svg: () => renderEyesZoomSVG('blue', 'big') }
+                ]
+            }
+        ];
+
+        /* =========================================================================
+           4. GAME QUESTIONS DATA
+           ========================================================================= */
+        const GAME1_QUESTIONS = [
+            {
+                label: 'Leo (Boy)',
+                character: { height: 'tall', weight: 'fit', age: 'young', hairColor: 'brown', hairStyle: 'curly', hairLength: 'short', eyeColor: 'brown', eyeSize: 'big', showRuler: true, shirtColor: '#3B82F6' },
+                options: ['Tall', 'Short', 'Curly', 'Straight', 'Brown Eyes', 'Blue Eyes'],
+                correct: ['Tall', 'Curly', 'Brown Eyes']
+            },
+            {
+                label: 'Grandpa Budi',
+                character: { height: 'short', weight: 'thin', age: 'old', hairColor: 'grey', hairStyle: 'bald', eyeColor: 'brown', eyeSize: 'small', showRuler: true, shirtColor: '#10B981' },
+                options: ['Old', 'Young', 'Bald', 'Long Hair', 'Thin', 'Fat'],
+                correct: ['Old', 'Bald', 'Thin']
+            },
+            {
+                label: 'Clara (Girl)',
+                character: { height: 'medium-height', weight: 'fit', age: 'young', hairColor: 'blonde', hairStyle: 'long', hairLength: 'long', eyeColor: 'blue', eyeSize: 'big', shirtColor: '#EC4899' },
+                options: ['Fair/Blonde', 'Dark Hair', 'Long Hair', 'Spiky Hair', 'Blue Eyes', 'Green Eyes'],
+                correct: ['Fair/Blonde', 'Long Hair', 'Blue Eyes']
+            },
+            {
+                label: 'Mr. Anton',
+                character: { height: 'medium-height', weight: 'fat', age: 'middle-aged', gender: 'man', hairColor: 'dark', hairStyle: 'spiky', eyeColor: 'green', eyeSize: 'small', shirtColor: '#F59E0B' },
+                options: ['Fat', 'Thin', 'Spiky', 'Curly', 'Green Eyes', 'Brown Eyes'],
+                correct: ['Fat', 'Spiky', 'Green Eyes']
+            }
+        ];
+
+        const GAME2_ROUNDS = [
+            {
+                items: [
+                    { id: 'm1', word: 'Tall', hint: 'Tinggi badan', svg: () => renderCartoonCharacter({ height: 'tall', weight: 'fit', age: 'young', hairColor: 'dark', hairStyle: 'short', eyeColor: 'brown', eyeSize: 'big', showRuler: true, shirtColor: '#0EA5E9' }) },
+                    { id: 'm2', word: 'Curly', hint: 'Bentuk rambut', svg: () => renderHairZoomSVG('brown', 'curly', 'short') },
+                    { id: 'm3', word: 'Blue', hint: 'Warna mata', svg: () => renderEyesZoomSVG('blue', 'big') },
+                    { id: 'm4', word: 'Old', hint: 'Kategori usia', svg: () => renderCartoonCharacter({ height: 'medium-height', weight: 'thin', age: 'old', hairColor: 'grey', hairStyle: 'short', eyeColor: 'brown', eyeSize: 'small', shirtColor: '#64748B' }) }
+                ]
+            },
+            {
+                items: [
+                    { id: 'm5', word: 'Bald', hint: 'Kondisi rambut', svg: () => renderHairZoomSVG('dark', 'bald', 'short') },
+                    { id: 'm6', word: 'Fat', hint: 'Bentuk tubuh', svg: () => renderCartoonCharacter({ height: 'medium-height', weight: 'fat', age: 'young', hairColor: 'brown', hairStyle: 'short', eyeColor: 'brown', eyeSize: 'big', shirtColor: '#F97316' }) },
+                    { id: 'm7', word: 'Spiky', hint: 'Model rambut', svg: () => renderHairZoomSVG('dark', 'spiky', 'short') },
+                    { id: 'm8', word: 'Green', hint: 'Warna mata', svg: () => renderEyesZoomSVG('green', 'big') }
+                ]
+            }
+        ];
+
+        const GAME3_QUESTIONS = [
+            {
+                text: '"Rina is a young girl. She is medium-height and thin. She has long, straight, brown hair and big brown eyes."',
+                correctIndex: 1,
+                characters: [
+                    { name: 'Character A', cfg: { height: 'medium-height', weight: 'thin', age: 'young', hairColor: 'blonde', hairStyle: 'curly', hairLength: 'long', eyeColor: 'blue', eyeSize: 'big', shirtColor: '#F43F5E' } },
+                    { name: 'Character B', cfg: { height: 'medium-height', weight: 'thin', age: 'young', hairColor: 'brown', hairStyle: 'straight', hairLength: 'long', eyeColor: 'brown', eyeSize: 'big', shirtColor: '#10B981' } },
+                    { name: 'Character C', cfg: { height: 'short', weight: 'fat', age: 'young', hairColor: 'brown', hairStyle: 'short', hairLength: 'short', eyeColor: 'brown', eyeSize: 'small', shirtColor: '#3B82F6' } },
+                    { name: 'Character D', cfg: { height: 'tall', weight: 'fit', age: 'old', hairColor: 'grey', hairStyle: 'wavy', hairLength: 'long', eyeColor: 'green', eyeSize: 'small', shirtColor: '#8B5CF6' } }
+                ]
+            },
+            {
+                text: '"Kevin is a tall and fit boy. He has short, spiky, dark hair and small green eyes."',
+                correctIndex: 2,
+                characters: [
+                    { name: 'Character A', cfg: { height: 'short', weight: 'fat', age: 'young', hairColor: 'dark', hairStyle: 'spiky', hairLength: 'short', eyeColor: 'brown', eyeSize: 'big', showRuler: true, shirtColor: '#F59E0B' } },
+                    { name: 'Character B', cfg: { height: 'tall', weight: 'thin', age: 'young', hairColor: 'red', hairStyle: 'curly', hairLength: 'short', eyeColor: 'blue', eyeSize: 'big', showRuler: true, shirtColor: '#EC4899' } },
+                    { name: 'Character C', cfg: { height: 'tall', weight: 'fit', age: 'young', hairColor: 'dark', hairStyle: 'spiky', hairLength: 'short', eyeColor: 'green', eyeSize: 'small', showRuler: true, shirtColor: '#0284C7' } },
+                    { name: 'Character D', cfg: { height: 'medium-height', weight: 'fit', age: 'young', hairColor: 'dark', hairStyle: 'bald', hairLength: 'short', eyeColor: 'green', eyeSize: 'small', showRuler: true, shirtColor: '#14B8A6' } }
+                ]
+            },
+            {
+                text: '"Mrs. Siti is an old woman. She is short and thin. She has short, wavy hair and small brown eyes."',
+                correctIndex: 0,
+                characters: [
+                    { name: 'Character A', cfg: { height: 'short', weight: 'thin', age: 'old', hairColor: 'grey', hairStyle: 'wavy', hairLength: 'short', eyeColor: 'brown', eyeSize: 'small', showRuler: true, shirtColor: '#A855F7' } },
+                    { name: 'Character B', cfg: { height: 'tall', weight: 'fat', age: 'old', hairColor: 'grey', hairStyle: 'bald', hairLength: 'short', eyeColor: 'blue', eyeSize: 'big', showRuler: true, shirtColor: '#64748B' } },
+                    { name: 'Character C', cfg: { height: 'short', weight: 'thin', age: 'young', hairColor: 'brown', hairStyle: 'straight', hairLength: 'long', eyeColor: 'brown', eyeSize: 'big', showRuler: true, shirtColor: '#F43F5E' } },
+                    { name: 'Character D', cfg: { height: 'medium-height', weight: 'fit', age: 'middle-aged', hairColor: 'dark', hairStyle: 'curly', hairLength: 'short', eyeColor: 'green', eyeSize: 'big', showRuler: true, shirtColor: '#0EA5E9' } }
+                ]
+            },
+            {
+                text: '"Dina is a young girl. She has long, wavy, red hair and big blue eyes. She is medium-height and fit."',
+                correctIndex: 3,
+                characters: [
+                    { name: 'Character A', cfg: { height: 'medium-height', weight: 'fit', age: 'young', hairColor: 'red', hairStyle: 'short', hairLength: 'short', eyeColor: 'brown', eyeSize: 'small', shirtColor: '#EAB308' } },
+                    { name: 'Character B', cfg: { height: 'short', weight: 'fat', age: 'young', hairColor: 'blonde', hairStyle: 'wavy', hairLength: 'long', eyeColor: 'blue', eyeSize: 'big', shirtColor: '#3B82F6' } },
+                    { name: 'Character C', cfg: { height: 'medium-height', weight: 'thin', age: 'young', hairColor: 'dark', hairStyle: 'straight', hairLength: 'long', eyeColor: 'green', eyeSize: 'big', shirtColor: '#10B981' } },
+                    { name: 'Character D', cfg: { height: 'medium-height', weight: 'fit', age: 'young', hairColor: 'red', hairStyle: 'wavy', hairLength: 'long', eyeColor: 'blue', eyeSize: 'big', shirtColor: '#EC4899' } }
+                ]
+            }
+        ];
+
+        /* =========================================================================
+           5. APPLICATION STATE & NAVIGATION
+           ========================================================================= */
+        const state = {
+            studentName: 'Student',
+            scoreG1: 0,
+            scoreG2: 0,
+            scoreG3: 0,
+            g1Index: 0,
+            g1Selected: [],
+            g1Answered: false,
+            g2Round: 0,
+            g2Placements: {},
+            g2SelectedWord: null,
+            g2Answered: false,
+            g3Index: 0,
+            g3Answered: false
+        };
+
+        function showScreen(screenId) {
+            stopAllSpeech();
+            const screens = ['screen-opening', 'screen-dictionary', 'screen-game1', 'screen-game2', 'screen-game3', 'screen-result'];
+            screens.forEach(id => document.getElementById(id).classList.add('hidden'));
+
+            const target = document.getElementById(screenId);
+            target.classList.remove('hidden');
+            target.classList.remove('screen-enter');
+            void target.offsetWidth;
+            target.classList.add('screen-enter');
+
+            const topBar = document.getElementById('top-bar');
+            if (screenId === 'screen-opening') {
+                topBar.classList.add('hidden');
+            } else {
+                topBar.classList.remove('hidden');
+            }
+
+            const stepMap = {
+                'screen-dictionary': 'step-dict',
+                'screen-game1': 'step-g1',
+                'screen-game2': 'step-g2',
+                'screen-game3': 'step-g3'
+            };
+            ['step-dict', 'step-g1', 'step-g2', 'step-g3'].forEach(sid => {
+                document.getElementById(sid).className = 'px-2.5 py-1 rounded-lg bg-slate-200 text-slate-600 whitespace-nowrap';
+            });
+            if (stepMap[screenId]) {
+                document.getElementById(stepMap[screenId]).className = 'px-2.5 py-1 rounded-lg bg-amber-400 text-slate-900 shadow-sm whitespace-nowrap';
+            }
+
+            updateLiveScore();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateLiveScore() {
+            document.getElementById('live-score').textContent = state.scoreG1 + state.scoreG2 + state.scoreG3;
+        }
+
+        /* =========================================================================
+           6. OPENING PAGE & START GAME
+           ========================================================================= */
+        function initOpeningShowcase() {
+            const samples = [
+                { label: 'Tall & Fit', cfg: { height: 'tall', weight: 'fit', age: 'young', hairColor: 'brown', hairStyle: 'spiky', eyeColor: 'blue', eyeSize: 'big', shirtColor: '#0EA5E9' } },
+                { label: 'Curly & Young', cfg: { height: 'medium-height', weight: 'thin', age: 'young', hairColor: 'red', hairStyle: 'curly', hairLength: 'long', eyeColor: 'green', eyeSize: 'big', shirtColor: '#EC4899' } },
+                { label: 'Old & Bald', cfg: { height: 'short', weight: 'thin', age: 'old', hairColor: 'grey', hairStyle: 'bald', eyeColor: 'brown', eyeSize: 'small', shirtColor: '#10B981' } },
+                { label: 'Long & Blonde', cfg: { height: 'medium-height', weight: 'fit', age: 'young', hairColor: 'blonde', hairStyle: 'straight', hairLength: 'long', eyeColor: 'blue', eyeSize: 'big', shirtColor: '#F59E0B' } }
+            ];
+
+            const container = document.getElementById('opening-characters');
+            container.innerHTML = samples.map((s, idx) => `
+                <div class="bg-gradient-to-b from-sky-50 to-white border-2 border-sky-200 rounded-2xl p-2 sm:p-3 flex flex-col items-center shadow-sm animate-float" style="animation-delay: ${idx * 0.25}s">
+                    <div class="w-24 h-28 sm:w-28 sm:h-32">${renderCartoonCharacter(s.cfg)}</div>
+                    <span class="mt-1 text-xs font-extrabold text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-full">${s.label}</span>
+                </div>
+            `).join('');
+        }
+
+        function startGame() {
+            playTone('click');
+            const nameInput = document.getElementById('input-student-name').value.trim();
+            state.studentName = nameInput || 'Siswa Hebat';
+            document.getElementById('header-student-name').textContent = '👤 ' + state.studentName;
+
+            renderDictionary('all');
+            showScreen('screen-dictionary');
+            // Speak welcome voice on user click gesture
+            speakEnglish("Welcome to Guess Who! Let's learn how to describe people and play the games!");
+        }
+
+        /* =========================================================================
+           7. WORD BANK (PICTURE DICTIONARY) WITH AUDIO & EXAMPLE SENTENCES
+           ========================================================================= */
+        function renderDictionary(filterCat) {
+            const grid = document.getElementById('dictionary-grid');
+            const filtered = filterCat === 'all'
+                ? DICTIONARY_CATEGORIES
+                : DICTIONARY_CATEGORIES.filter(c => c.id === filterCat);
+
+            grid.innerHTML = filtered.map(cat => `
+                <div class="border-2 rounded-3xl p-4 sm:p-5 ${cat.bgClass}">
+                    <div class="flex flex-wrap items-center justify-between gap-2 px-3.5 py-2 rounded-2xl mb-4 ${cat.headerClass}">
+                        <h3 class="font-display font-bold text-lg sm:text-xl flex items-center gap-2">
+                            <span class="w-3.5 h-3.5 rounded-full ${cat.badgeClass} inline-block"></span>
+                            ${cat.title}
+                        </h3>
+                        <span class="text-xs font-extrabold uppercase tracking-wider opacity-80">${cat.items.length} Vocabulary</span>
+                    </div>
+
+                    <!-- Vocabulary Cards Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 mb-5">
+                        ${cat.items.map(item => `
+                            <div class="bg-white border-2 ${cat.cardBorder} rounded-2xl p-3.5 flex flex-col justify-between shadow-sm transition transform hover:-translate-y-1">
+                                <div>
+                                    <div class="flex items-start justify-between gap-1">
+                                        <div>
+                                            <span class="font-display font-bold text-slate-800 text-base sm:text-lg block leading-tight">${item.word}</span>
+                                            <span class="inline-block text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full mt-0.5">${item.meaning}</span>
+                                        </div>
+                                        <button type="button" onclick="speakEnglish('${item.speakWord.replace(/'/g, "\\'")}', this)" title="Dengarkan pengucapan vocabulary"
+                                            class="shrink-0 w-9 h-9 rounded-xl bg-sky-100 hover:bg-sky-500 hover:text-white text-sky-700 flex items-center justify-center font-bold text-base transition cursor-pointer shadow-sm">
+                                            🔊
+                                        </button>
+                                    </div>
+                                    <div class="w-24 h-24 sm:w-28 sm:h-28 mx-auto my-2 flex items-center justify-center">
+                                        ${item.svg()}
+                                    </div>
+                                </div>
+
+                                <!-- Example Sentence inside Card with Speaker Button -->
+                                <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 mt-1 flex items-start justify-between gap-2">
+                                    <div class="text-left">
+                                        <p class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">"${item.exEn}"</p>
+                                        <p class="text-[11px] sm:text-xs font-semibold text-slate-500 mt-0.5">(${item.exId})</p>
+                                    </div>
+                                    <button type="button" onclick="speakEnglish('${item.exEn.replace(/'/g, "\\'")}', this)" title="Dengarkan contoh kalimat"
+                                        class="shrink-0 w-7 h-7 rounded-lg bg-amber-100 hover:bg-amber-400 text-amber-900 flex items-center justify-center text-xs font-bold transition cursor-pointer">
+                                        🔊
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Category Summary Example Sentences List -->
+                    <div class="bg-white/90 border border-slate-200 rounded-2xl p-3.5">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-2 flex items-center gap-1.5">
+                            <span>💬</span> Contoh Kalimat Lengkap (${cat.title}):
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            ${cat.items.map(item => `
+                                <div class="flex items-center justify-between gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 text-xs sm:text-sm">
+                                    <div>
+                                        <span class="font-bold text-slate-800">${item.exEn}</span>
+                                        <span class="text-slate-500 ml-1">(${item.exId})</span>
+                                    </div>
+                                    <button type="button" onclick="speakEnglish('${item.exEn.replace(/'/g, "\\'")}', this)" title="Dengarkan kalimat"
+                                        class="shrink-0 px-2 py-1 rounded-lg bg-sky-100 hover:bg-sky-500 hover:text-white text-sky-700 font-bold text-xs cursor-pointer">
+                                        🔊
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterDictionary(catId, clickedBtn) {
+            playTone('click');
+            document.querySelectorAll('.dict-tab').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-offset-1', 'ring-slate-700');
+            });
+            if (clickedBtn) {
+                clickedBtn.classList.add('ring-2', 'ring-offset-1', 'ring-slate-700');
+            }
+            renderDictionary(catId);
+        }
+
+        function openDictionaryReview() {
+            playTone('click');
+            renderDictionary('all');
+            showScreen('screen-dictionary');
+        }
+
+        /* =========================================================================
+           8. GAME 1: PICK THE ADJECTIVES
+           ========================================================================= */
+        function goToGame1() {
+            playTone('click');
+            state.g1Index = 0;
+            state.scoreG1 = 0;
+            loadGame1Question();
+            showScreen('screen-game1');
+            playGame1Instruction(document.getElementById('g1-btn-audio'));
+        }
+
+        function loadGame1Question() {
+            const q = GAME1_QUESTIONS[state.g1Index];
+            state.g1Selected = [];
+            state.g1Answered = false;
+
+            document.getElementById('g1-q-num').textContent = state.g1Index + 1;
+            document.getElementById('g1-q-total').textContent = GAME1_QUESTIONS.length;
+            document.getElementById('g1-character-svg').innerHTML = renderCartoonCharacter(q.character);
+            document.getElementById('g1-char-label').textContent = q.label;
+
+            const fb = document.getElementById('g1-feedback');
+            fb.classList.add('hidden');
+            document.getElementById('g1-btn-check').classList.remove('hidden');
+            document.getElementById('g1-btn-next').classList.add('hidden');
+
+            const optsContainer = document.getElementById('g1-options');
+            optsContainer.innerHTML = q.options.map(opt => `
+                <button type="button" onclick="toggleGame1Option(this, '${opt}')"
+                    class="g1-opt-btn btn-cartoon bg-white hover:bg-sky-50 border-2 border-slate-300 text-slate-700 font-display font-bold text-sm sm:text-base py-3 px-3 rounded-2xl cursor-pointer">
+                    ${opt}
+                </button>
+            `).join('');
+        }
+
+        function toggleGame1Option(btn, word) {
+            if (state.g1Answered) return;
+            playTone('click');
+
+            const idx = state.g1Selected.indexOf(word);
+            if (idx > -1) {
+                state.g1Selected.splice(idx, 1);
+                btn.classList.remove('bg-sky-500', 'text-white', 'border-sky-600');
+                btn.classList.add('bg-white', 'text-slate-700', 'border-slate-300');
+            } else {
+                state.g1Selected.push(word);
+                btn.classList.remove('bg-white', 'text-slate-700', 'border-slate-300');
+                btn.classList.add('bg-sky-500', 'text-white', 'border-sky-600');
+            }
+        }
+
+        function checkGame1() {
+            const q = GAME1_QUESTIONS[state.g1Index];
+            const fb = document.getElementById('g1-feedback');
+
+            if (state.g1Selected.length === 0) {
+                playTone('wrong');
+                speakEnglish("Oops! Try again!");
+                fb.className = 'mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-amber-50 border-amber-300 text-amber-800';
+                fb.textContent = '⚠️ Pilih minimal satu kata sifat terlebih dahulu!';
+                fb.classList.remove('hidden');
+                return;
+            }
+
+            const isCorrect =
+                state.g1Selected.length === q.correct.length &&
+                q.correct.every(val => state.g1Selected.includes(val));
+
+            if (isCorrect) {
+                playTone('correct');
+                speakEnglish("Great job! Your answer is correct!");
+                state.g1Answered = true;
+                state.scoreG1 += 10;
+                updateLiveScore();
+
+                fb.className = 'mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-emerald-50 border-emerald-400 text-emerald-800';
+                fb.innerHTML = `🌟 <strong>Great Job! Your answer is correct!</strong> Jawabanmu tepat: <em>${q.correct.join(', ')}</em> (+10 poin)`;
+                fb.classList.remove('hidden');
+
+                document.querySelectorAll('.g1-opt-btn').forEach(btn => {
+                    btn.disabled = true;
+                    if (q.correct.includes(btn.textContent.trim())) {
+                        btn.className = 'g1-opt-btn bg-emerald-500 text-white border-2 border-emerald-600 font-display font-bold text-sm sm:text-base py-3 px-3 rounded-2xl';
+                    }
+                });
+
+                document.getElementById('g1-btn-check').classList.add('hidden');
+                document.getElementById('g1-btn-next').classList.remove('hidden');
+            } else {
+                playTone('wrong');
+                speakEnglish("Oops! Try again!");
+                fb.className = 'animate-shake mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-rose-50 border-rose-300 text-rose-800';
+                fb.innerHTML = `❌ <strong>Oops! Try Again!</strong> Kamu memilih ${state.g1Selected.length} kata. Perhatikan kembali tinggi/tubuh, rambut, dan warna matanya (pilih 3 kata yang tepat).`;
+                fb.classList.remove('hidden');
+            }
+        }
+
+        function nextGame1() {
+            playTone('click');
+            state.g1Index++;
+            if (state.g1Index < GAME1_QUESTIONS.length) {
+                loadGame1Question();
+            } else {
+                showStageModal(
+                    'Game 1 Selesai! 🎯',
+                    'Luar biasa! Kamu berhasil mengidentifikasi kosakata ciri-ciri fisik karakter.',
+                    `${state.scoreG1} / 40`,
+                    'Lanjut ke Game 2: Match Word ➔',
+                    goToGame2
+                );
+            }
+        }
+
+        /* =========================================================================
+           9. GAME 2: MATCH WORD TO PICTURE
+           ========================================================================= */
+        function goToGame2() {
+            closeStageModal();
+            playTone('click');
+            state.g2Round = 0;
+            state.scoreG2 = 0;
+            loadGame2Round();
+            showScreen('screen-game2');
+            playGame2Instruction(document.getElementById('g2-btn-audio'));
+        }
+
+        function loadGame2Round() {
+            state.g2Placements = {};
+            state.g2SelectedWord = null;
+            state.g2Answered = false;
+
+            document.getElementById('g2-round-num').textContent = state.g2Round + 1;
+            document.getElementById('g2-round-total').textContent = GAME2_ROUNDS.length;
+            document.getElementById('g2-feedback').classList.add('hidden');
+            document.getElementById('g2-btn-check').classList.remove('hidden');
+            document.getElementById('g2-btn-next').classList.add('hidden');
+
+            renderGame2UI();
+        }
+
+        function renderGame2UI() {
+            const round = GAME2_ROUNDS[state.g2Round];
+            const placedWords = Object.values(state.g2Placements);
+            const availableWords = round.items
+                .map(i => i.word)
+                .filter(w => !placedWords.includes(w))
+                .sort();
+
+            const poolEl = document.getElementById('g2-word-pool');
+            if (availableWords.length === 0) {
+                poolEl.innerHTML = `<span class="text-xs font-bold text-slate-400 italic py-2">Semua kata sudah ditempatkan! Klik "Check Matches" untuk memeriksa.</span>`;
+            } else {
+                poolEl.innerHTML = availableWords.map(word => {
+                    const isSelected = state.g2SelectedWord === word;
+                    return `
+                        <div draggable="true"
+                             ondragstart="onDragStartWord(event, '${word}')"
+                             onclick="onClickWordChip('${word}')"
+                             class="draggable-chip px-5 py-2.5 rounded-xl font-display font-bold text-base shadow-sm border-2 ${isSelected ? 'bg-amber-400 border-amber-600 text-slate-900 scale-105' : 'bg-white border-purple-400 text-purple-800 hover:bg-purple-50'}">
+                            🏷️ ${word}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const gridEl = document.getElementById('g2-drop-grid');
+            gridEl.innerHTML = round.items.map(item => {
+                const placedWord = state.g2Placements[item.id];
+                return `
+                    <div ondragover="onDragOverZone(event)"
+                         ondragleave="onDragLeaveZone(event)"
+                         ondrop="onDropZone(event, '${item.id}')"
+                         onclick="onClickDropZone('${item.id}')"
+                         class="drop-zone bg-purple-50/60 border-2 border-dashed ${placedWord ? 'border-purple-500 bg-white' : 'border-purple-300'} rounded-2xl p-3 flex flex-col items-center justify-between text-center cursor-pointer min-h-[210px]">
+                        <div class="w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+                            ${item.svg()}
+                        </div>
+                        <span class="text-xs font-bold text-slate-400 mb-2">${item.hint}</span>
+                        ${placedWord
+                            ? `<div class="w-full py-2 px-3 rounded-xl bg-purple-600 text-white font-display font-bold text-sm sm:text-base flex items-center justify-between shadow">
+                                 <span>${placedWord}</span>
+                                 ${!state.g2Answered ? `<span class="text-xs bg-purple-800 px-1.5 py-0.5 rounded">✕</span>` : ''}
+                               </div>`
+                            : `<div class="w-full py-2 px-3 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs sm:text-sm border border-slate-200">
+                                 Drop / Tap di sini
+                               </div>`
+                        }
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function onDragStartWord(ev, word) {
+            if (state.g2Answered) return;
+            ev.dataTransfer.setData('text/plain', word);
+            state.g2SelectedWord = word;
+        }
+
+        function onDragOverZone(ev) {
+            ev.preventDefault();
+            ev.currentTarget.classList.add('drag-over');
+        }
+
+        function onDragLeaveZone(ev) {
+            ev.currentTarget.classList.remove('drag-over');
+        }
+
+        function onDropZone(ev, dropId) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drag-over');
+            if (state.g2Answered) return;
+
+            const word = ev.dataTransfer.getData('text/plain') || state.g2SelectedWord;
+            if (!word) return;
+
+            playTone('click');
+            Object.keys(state.g2Placements).forEach(k => {
+                if (state.g2Placements[k] === word) delete state.g2Placements[k];
+            });
+            state.g2Placements[dropId] = word;
+            state.g2SelectedWord = null;
+            renderGame2UI();
+        }
+
+        function onClickWordChip(word) {
+            if (state.g2Answered) return;
+            playTone('click');
+            state.g2SelectedWord = (state.g2SelectedWord === word) ? null : word;
+            renderGame2UI();
+        }
+
+        function onClickDropZone(dropId) {
+            if (state.g2Answered) return;
+            if (state.g2Placements[dropId] && !state.g2SelectedWord) {
+                playTone('click');
+                delete state.g2Placements[dropId];
+                renderGame2UI();
+                return;
+            }
+            if (state.g2SelectedWord) {
+                playTone('click');
+                Object.keys(state.g2Placements).forEach(k => {
+                    if (state.g2Placements[k] === state.g2SelectedWord) delete state.g2Placements[k];
+                });
+                state.g2Placements[dropId] = state.g2SelectedWord;
+                state.g2SelectedWord = null;
+                renderGame2UI();
+            }
+        }
+
+        function resetGame2Round() {
+            if (state.g2Answered) return;
+            playTone('click');
+            state.g2Placements = {};
+            state.g2SelectedWord = null;
+            renderGame2UI();
+        }
+
+        function checkGame2() {
+            const round = GAME2_ROUNDS[state.g2Round];
+            const fb = document.getElementById('g2-feedback');
+
+            if (Object.keys(state.g2Placements).length < round.items.length) {
+                playTone('wrong');
+                speakEnglish("Oops! Try again!");
+                fb.className = 'mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-amber-50 border-amber-300 text-amber-800';
+                fb.textContent = '⚠️ Pasangkan semua 4 kata ke gambar terlebih dahulu sebelum memeriksa!';
+                fb.classList.remove('hidden');
+                return;
+            }
+
+            let correctCount = 0;
+            round.items.forEach(item => {
+                if (state.g2Placements[item.id] === item.word) correctCount++;
+            });
+
+            if (correctCount === round.items.length) {
+                playTone('correct');
+                speakEnglish("Great job! Your answer is correct!");
+                state.g2Answered = true;
+                state.scoreG2 += 20;
+                updateLiveScore();
+                renderGame2UI();
+
+                fb.className = 'mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-emerald-50 border-emerald-400 text-emerald-800';
+                fb.innerHTML = `🎉 <strong>Great Job! Your answer is correct!</strong> Semua pasangan gambar dan kosakata benar! (+20 poin)`;
+                fb.classList.remove('hidden');
+
+                document.getElementById('g2-btn-check').classList.add('hidden');
+                document.getElementById('g2-btn-next').classList.remove('hidden');
+            } else {
+                playTone('wrong');
+                speakEnglish("Oops! Try again!");
+                fb.className = 'animate-shake mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-rose-50 border-rose-300 text-rose-800';
+                fb.innerHTML = `❌ <strong>Oops! Try Again!</strong> Baru <strong>${correctCount} dari 4</strong> pasangan yang tepat. Klik kata pada kotak yang kurang pas untuk memindahkannya.`;
+                fb.classList.remove('hidden');
+            }
+        }
+
+        function nextGame2() {
+            playTone('click');
+            state.g2Round++;
+            if (state.g2Round < GAME2_ROUNDS.length) {
+                loadGame2Round();
+            } else {
+                showStageModal(
+                    'Game 2 Selesai! 🧩',
+                    'Hebat! Kamu sudah memahami hubungan antara kosakata dan ilustrasi fisik.',
+                    `${state.scoreG2} / 40`,
+                    'Lanjut ke Game 3: Who Is It? ➔',
+                    goToGame3
+                );
+            }
+        }
+
+        /* =========================================================================
+           10. GAME 3: WHO IS IT?
+           ========================================================================= */
+        function goToGame3() {
+            closeStageModal();
+            playTone('click');
+            state.g3Index = 0;
+            state.scoreG3 = 0;
+            loadGame3Question();
+            showScreen('screen-game3');
+            playGame3Instruction(document.getElementById('g3-btn-audio'));
+        }
+
+        function loadGame3Question() {
+            const q = GAME3_QUESTIONS[state.g3Index];
+            state.g3Answered = false;
+
+            document.getElementById('g3-q-num').textContent = state.g3Index + 1;
+            document.getElementById('g3-q-total').textContent = GAME3_QUESTIONS.length;
+            document.getElementById('g3-description-text').textContent = q.text;
+
+            const fb = document.getElementById('g3-feedback');
+            fb.classList.add('hidden');
+            document.getElementById('g3-btn-next').classList.add('hidden');
+
+            const grid = document.getElementById('g3-characters-grid');
+            grid.innerHTML = q.characters.map((char, idx) => `
+                <button type="button" onclick="selectGame3Character(this, ${idx})"
+                    class="g3-char-card btn-cartoon bg-white hover:bg-pink-50 border-2 border-slate-200 hover:border-pink-400 rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer">
+                    <div class="w-32 h-40 sm:w-36 sm:h-44 flex items-center justify-center">
+                        ${renderCartoonCharacter(char.cfg)}
+                    </div>
+                    <span class="mt-2 bg-slate-100 text-slate-700 font-display font-bold text-sm px-4 py-1 rounded-full">
+                        ${char.name}
+                    </span>
+                </button>
+            `).join('');
+        }
+
+        function selectGame3Character(btn, chosenIndex) {
+            if (state.g3Answered) return;
+            const q = GAME3_QUESTIONS[state.g3Index];
+            const fb = document.getElementById('g3-feedback');
+
+            if (chosenIndex === q.correctIndex) {
+                playTone('correct');
+                speakEnglish("Great job! Your answer is correct!");
+                state.g3Answered = true;
+                state.scoreG3 += 10;
+                updateLiveScore();
+
+                document.querySelectorAll('.g3-char-card').forEach((card, i) => {
+                    card.disabled = true;
+                    if (i === chosenIndex) {
+                        card.className = 'g3-char-card bg-emerald-50 border-4 border-emerald-500 rounded-2xl p-3 flex flex-col items-center text-center shadow-md';
+                    } else {
+                        card.classList.add('opacity-50');
+                    }
+                });
+
+                fb.className = 'mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-emerald-50 border-emerald-400 text-emerald-800';
+                fb.innerHTML = `🌟 <strong>Well Done! Your answer is correct!</strong> Pilihanmu (<strong>${q.characters[chosenIndex].name}</strong>) sangat sesuai dengan teks deskriptif! (+10 poin)`;
+                fb.classList.remove('hidden');
+
+                const nextBtn = document.getElementById('g3-btn-next');
+                nextBtn.textContent = (state.g3Index === GAME3_QUESTIONS.length - 1) ? 'Lihat Hasil Akhir 🏆' : 'Next Question ➔';
+                nextBtn.classList.remove('hidden');
+            } else {
+                playTone('wrong');
+                speakEnglish("Oops! Try again!");
+                btn.classList.add('animate-shake', 'border-rose-400', 'bg-rose-50');
+                setTimeout(() => btn.classList.remove('animate-shake'), 450);
+
+                fb.className = 'mt-5 p-4 rounded-2xl font-bold text-sm sm:text-base border-2 bg-rose-50 border-rose-300 text-rose-800';
+                fb.innerHTML = `❌ <strong>Oops! Try Again!</strong> Karakter <strong>${q.characters[chosenIndex].name}</strong> belum sesuai dengan deskripsi. Baca kembali ciri tinggi badan, rambut, dan matanya!`;
+                fb.classList.remove('hidden');
+            }
+        }
+
+        function nextGame3() {
+            playTone('click');
+            state.g3Index++;
+            if (state.g3Index < GAME3_QUESTIONS.length) {
+                loadGame3Question();
+            } else {
+                showFinalResult();
+            }
+        }
+
+        /* =========================================================================
+           11. INTERMEDIATE MODAL & FINAL RESULT PAGE
+           ========================================================================= */
+        function showStageModal(title, msg, scoreText, btnText, callback) {
+            playTone('fanfare');
+            speakEnglish("Congratulations! You have completed the game!");
+            document.getElementById('modal-stage-title').textContent = title;
+            document.getElementById('modal-stage-msg').textContent = msg;
+            document.getElementById('modal-stage-score').textContent = scoreText;
+            const btn = document.getElementById('modal-stage-btn');
+            btn.textContent = btnText;
+            btn.onclick = callback;
+            document.getElementById('stage-summary-modal').classList.remove('hidden');
+        }
+
+        function closeStageModal() {
+            document.getElementById('stage-summary-modal').classList.add('hidden');
+        }
+
+        function showFinalResult() {
+            playTone('fanfare');
+            const total = state.scoreG1 + state.scoreG2 + state.scoreG3;
+
+            document.getElementById('res-student-name').textContent = state.studentName;
+            document.getElementById('res-g1-score').textContent = state.scoreG1;
+            document.getElementById('res-g2-score').textContent = state.scoreG2;
+            document.getElementById('res-g3-score').textContent = state.scoreG3;
+            document.getElementById('res-total-score').textContent = total;
+
+            let motivation = '';
+            if (total >= 100) {
+                motivation = '🌟 "Congratulations! You have finished all the games. Great job and keep learning! Kamu sangat mahir memahami teks deskriptif Bahasa Inggris!"';
+            } else if (total >= 70) {
+                motivation = '👏 "Great Job! Pemahamanmu sudah sangat baik. Terus berlatih membaca teks deskriptif agar semakin lancar!"';
+            } else {
+                motivation = '💪 "Good Effort! Kamu sudah menyelesaikan semua tantangan. Ayo buka kembali Picture Dictionary dan coba mainkan lagi untuk meraih skor maksimal!"';
+            }
+            document.getElementById('res-motivation').textContent = motivation;
+
+            showScreen('screen-result');
+            playClosingAudio(document.getElementById('res-btn-audio'));
+        }
+
+        function playAgain() {
+            playTone('click');
+            stopAllSpeech();
+            state.scoreG1 = 0;
+            state.scoreG2 = 0;
+            state.scoreG3 = 0;
+            state.g1Index = 0;
+            state.g2Round = 0;
+            state.g3Index = 0;
+            updateLiveScore();
+            showScreen('screen-opening');
+        }
+
+        window.onload = function () {
+            initOpeningShowcase();
+        };
+    </script>
+</body>
+</html>
